@@ -283,6 +283,17 @@ function configure_yarn() {
     --configuration_file "/etc/hadoop/conf/yarn-site.xml" \
     --name "yarn.nodemanager.local-dirs" 2>/dev/null | tr -d '\n')
   chown yarn:yarn -R "${yarn_local_dirs[@]/,/}"
+
+  # Restart any NodeManagers, so that they read the config changes
+  if systemctl status hadoop-yarn-nodemanager; then
+    # Kill Node Manager to prevent unregister/register cycle
+    systemctl kill -s KILL hadoop-yarn-nodemanager
+  fi
+  # Restart any ResourceManagers, so that they read the config changes
+  if systemctl status hadoop-yarn-resourcemanager; then
+    # Kill Node Manager to prevent unregister/register cycle
+    systemctl kill -s KILL hadoop-yarn-resourcemanager
+  fi
 }
 
 function configure_gpu_exclusive_mode() {
